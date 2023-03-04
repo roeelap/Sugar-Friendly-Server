@@ -22,6 +22,10 @@ const getDishesCollection = async () => {
     return client.db('Milab-App').collection('Dishes');
 }
 
+const getRestaurantsCollection = async () => {
+    return client.db('Milab-App').collection('Restaurants');
+}
+
 
 app.get('/add-dish', async (req, res) => {
     console.log("Adding a dish");
@@ -41,7 +45,8 @@ app.get('/add-dish', async (req, res) => {
         foodTags: foodTags,
         nutritionTags: nutritionTags,
         likes: 0,
-        rating: 3.0
+        rating: 3.0,
+        uploadDate: new Date()
     };
 
     const dishesCollection = await getDishesCollection();
@@ -50,10 +55,37 @@ app.get('/add-dish', async (req, res) => {
         .catch(error => console.error(error));
 });
 
-app.get('/get-all-dishes', async (req, res) => {
+app.get('/get-data', async (req, res) => {
+    console.log("Getting data");
+    try {
+        const results = await Promise.all([
+            getAllDishes(),
+            getAllDishes(),
+            getDishesByUploadDate(),
+            getAllRestaurants()
+            
+        ]);
+        return res.send({ recommendedDishes: results[0], topRatedDishes: results[1], 
+            newestDishes: results[2], restaurants: results[3] });
+    } catch (error) {
+        console.error(error);
+    }
+});
+
+async function getAllDishes() {
     console.log("Getting all dishes");
     const dishesCollection = await getDishesCollection();
-    dishesCollection.find().toArray()
-        .then(results => { res.send({dishes: results}); })
-        .catch(error => console.error(error));
-});
+    return dishesCollection.find().toArray();
+}
+
+async function getAllRestaurants() {
+    console.log("Getting all restaurants");
+    const restaurantsCollection = await getRestaurantsCollection();
+    return restaurantsCollection.find().toArray();
+}
+
+async function getDishesByUploadDate() {
+    console.log("Getting dishes by upload date");
+    const dishesCollection = await getDishesCollection();
+    return dishesCollection.find().sort({ uploadDate: -1 }).toArray();
+}
