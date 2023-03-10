@@ -55,18 +55,17 @@ app.get('/add-dish', async (req, res) => {
         .catch(error => console.error(error));
 });
 
-app.get('/get-data', async (req, res) => {
-    console.log("Getting data");
+app.get('/dishes', async (req, res) => {
+    console.log("Getting dishes");
     try {
         const results = await Promise.all([
             getAllDishes(),
-            getAllDishes(),
+            getTopRatedDishes(),
             getDishesByUploadDate(),
-            getAllRestaurants()
             
         ]);
         return res.send({ recommendedDishes: results[0], topRatedDishes: results[1], 
-            newestDishes: results[2], restaurants: results[3] });
+            newestDishes: results[2] });
     } catch (error) {
         console.error(error);
     }
@@ -78,14 +77,30 @@ async function getAllDishes() {
     return dishesCollection.find().toArray();
 }
 
-async function getAllRestaurants() {
-    console.log("Getting all restaurants");
-    const restaurantsCollection = await getRestaurantsCollection();
-    return restaurantsCollection.find().toArray();
+async function getTopRatedDishes() {
+    console.log("Getting top rated dishes");
+    const dishesCollection = await getDishesCollection();
+    return dishesCollection.find().sort({ rating: -1 }).toArray();
 }
 
 async function getDishesByUploadDate() {
     console.log("Getting dishes by upload date");
     const dishesCollection = await getDishesCollection();
     return dishesCollection.find().sort({ uploadDate: -1 }).toArray();
+}
+
+app.get('/restaurants', async (req, res) => {
+    console.log("Getting restaurants");
+    try {
+        const result = await getAllRestaurants();            
+        return res.send({ restaurants: result });
+    } catch (error) {
+        console.error(error);
+    }
+});
+
+async function getAllRestaurants() {
+    console.log("Getting all restaurants");
+    const restaurantsCollection = await getRestaurantsCollection();
+    return restaurantsCollection.find().toArray();
 }
