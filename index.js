@@ -26,6 +26,10 @@ const getRestaurantsCollection = async () => {
     return client.db('Milab-App').collection('Restaurants');
 }
 
+const getTagsCollection = async () => {
+    return client.db('Milab-App').collection('Tags');
+}
+
 
 app.get('/add-dish', async (req, res) => {
     console.log("Adding a dish");
@@ -46,7 +50,8 @@ app.get('/add-dish', async (req, res) => {
         nutritionTags: nutritionTags,
         likes: 0,
         rating: 3.0,
-        uploadDate: new Date()
+        sugarRating: 3.0,
+        uploadDate: new Date(),
     };
 
     const dishesCollection = await getDishesCollection();
@@ -103,4 +108,48 @@ async function getAllRestaurants() {
     console.log("Getting all restaurants");
     const restaurantsCollection = await getRestaurantsCollection();
     return restaurantsCollection.find().toArray();
+}
+
+app.get('/search', async (req, res) => {
+    const query = req.query.query;
+    console.log("Searching for " + query);
+    try {
+        const results = await searchDishes(query);
+        return res.send({ results: results });
+    } catch (error) {
+        console.error(error);
+    }
+});
+
+async function searchDishes(query) {
+    const regex = '.*' + query + '.*';
+    const dishesCollection = await getDishesCollection();
+    const results = dishesCollection.find(
+        { $or: [
+            { name: { $regex: regex, $options: 'i' } },
+            { restaurant: { $regex: regex, $options: 'i' } },
+            { foodTags: { $regex: regex, $options: 'i' } },
+            { nutritionTags: { $regex: regex, $options: 'i' } }
+        ]}
+    )
+    console.log(results);
+    return results.toArray();
+}
+
+app.get('/tags', async (req, res) => {
+    console.log("Getting tags");
+    try {
+        const tags = await getTags();
+        return res.send({ tags: tags });
+    } catch (error) {
+        console.error(error);
+    }
+});
+
+async function getTags() {
+    const tagsCollection = await getTagsCollection();
+    const tags = tagsCollection.find().toArray();
+    const foodTags = tags[0].foodTags;
+    const nutritionTags = tags[1].nutritionTags;
+    return foodTags.concat(nutritionTags);
 }
