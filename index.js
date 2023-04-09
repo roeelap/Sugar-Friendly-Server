@@ -3,10 +3,18 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const MongoClient = require('mongodb').MongoClient;
+const NodeGeocoder = require('node-geocoder');
 
 const app = express();
 app.use(bodyParser.json());
 const PORT = 8080;
+
+// setup geocoder
+const options = {
+    provider: 'google',
+    apiKey: 'AIzaSyA4VcSGbk-S5eAlv5fKl1lk6ZAx1OFAmFw'
+}
+const geocoder = NodeGeocoder(options);
 
 // connect to the mongoDB database
 const MONGO_URL = 'mongodb+srv://rlapushin:0XMuH1LFBnOMjU7B@milab-app.pzlrmiq.mongodb.net/?retryWrites=true&w=majority';
@@ -62,15 +70,31 @@ app.get('/add-dish', async (req, res) => {
 
 app.get('/dishes', async (req, res) => {
     console.log("Getting dishes");
+
+    const userLat = req.query.lat || null;
+    const userLng = req.query.lng || null;
+
+    if (userLat == null || userLng == null) {
+        res.send("Please provide user latitude and longitude");
+        return;
+    }
+
     try {
+
         const results = await Promise.all([
             getAllDishes(),
-            getTopRatedDishes(),
-            getDishesByUploadDate(),
-            
+            getTopRatedDishes(), 
+            getNewestDishes()
         ]);
-        return res.send({ recommendedDishes: results[0], topRatedDishes: results[1], 
-            newestDishes: results[2] });
+
+        const resultsWithDistances = await Promise.all([
+            calculateDistances(results[0], userLat, userLng),
+            calculateDistances(results[1], userLat, userLng),
+            calculateDistances(results[2], userLat, userLng)
+        ]);
+
+        return res.send({ recommendedDishes: resultsWithDistances[0], topRatedDishes: resultsWithDistances[1], newestDishes: resultsWithDistances[2] });
+
     } catch (error) {
         console.error(error);
     }
@@ -88,10 +112,42 @@ async function getTopRatedDishes() {
     return dishesCollection.find().sort({ rating: -1 }).toArray();
 }
 
-async function getDishesByUploadDate() {
-    console.log("Getting dishes by upload date");
+async function getNewestDishes() {
+    console.log("Getting newest dishes");
     const dishesCollection = await getDishesCollection();
     return dishesCollection.find().sort({ uploadDate: -1 }).toArray();
+}
+
+async function calculateDistances(dishes, userLat, userLng) {
+    for (let dish of dishes) {
+        // get restaurant lat and long using geocoder
+        const geocoderRes = await geocoder.geocode(dish.address);
+        const lat = geocoderRes[0].latitude;
+        const long = geocoderRes[0].longitude;
+
+        // calculate distance to user and add to dish object
+        let distanceToUser = getDistanceFromLatLonInKm(userLat, userLng, lat, long);
+        dish.distanceToUser = distanceToUser;
+    }
+
+    return dishes
+}
+
+function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
+    var R = 6371; // Radius of the earth in km
+    var dLat = deg2rad(lat2 - lat1);  // deg2rad below
+    var dLon = deg2rad(lon2 - lon1);
+    var a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    var d = R * c; // Distance in km
+    return Math.round(d * 100) / 100; // 2 decimal places
+}
+
+function deg2rad(deg) {
+    return deg * (Math.PI / 180)
 }
 
 app.get('/restaurants', async (req, res) => {
