@@ -167,16 +167,16 @@ app.get('/search', async (req, res) => {
 async function searchDishes(query) {
     const regex = '.*' + query + '.*';
     const dishesCollection = await getDishesCollection();
-    const results = dishesCollection.find(
+    const results = await dishesCollection.find(
         { $or: [
             { name: { $regex: regex, $options: 'i' } },
             { restaurant: { $regex: regex, $options: 'i' } },
             { foodTags: { $regex: regex, $options: 'i' } },
             { nutritionTags: { $regex: regex, $options: 'i' } }
         ]}
-    )
+    ).toArray();
     console.log(results);
-    return results.toArray();
+    return results;
 }
 
 app.get('/tags', async (req, res) => {
