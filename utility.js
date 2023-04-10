@@ -1,28 +1,5 @@
 "use strict";
 
-const NodeGeocoder = require('node-geocoder');
-
-// setup geocoder
-const options = {
-    provider: 'google',
-    apiKey: 'AIzaSyA4VcSGbk-S5eAlv5fKl1lk6ZAx1OFAmFw'
-}
-const geocoder = NodeGeocoder(options);
-
-async function calculateDistances(dishes, userLat, userLng) {
-    for (let dish of dishes) {
-        // get restaurant lat and long using geocoder
-        const geocoderRes = await geocoder.geocode(dish.address);
-        const lat = geocoderRes[0].latitude;
-        const long = geocoderRes[0].longitude;
-
-        // calculate distance to user and add to dish object
-        let distanceToUser = getDistanceFromLatLonInKm(userLat, userLng, lat, long);
-        dish.distanceToUser = distanceToUser;
-    }
-
-    return dishes
-}
 
 function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
     var R = 6371; // Radius of the earth in km
@@ -41,4 +18,4 @@ function deg2rad(deg) {
     return deg * (Math.PI / 180)
 }
 
-module.exports = { calculateDistances };
+module.exports = { getDistanceFromLatLonInKm };

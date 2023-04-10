@@ -3,11 +3,20 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const MongoClient = require('mongodb').MongoClient;
-const { calculateDistances } = require('./utility');
+const NodeGeocoder = require('node-geocoder');
+const { getDistanceFromLatLonInKm } = require('./utility');
 
 const app = express();
 app.use(bodyParser.json());
 const PORT = 8080;
+
+// setup geocoder
+const options = {
+    provider: 'google',
+    apiKey: 'AIzaSyA4VcSGbk-S5eAlv5fKl1lk6ZAx1OFAmFw'
+}
+const geocoder = NodeGeocoder(options);
+
 
 // connect to the mongoDB database
 const MONGO_URL = 'mongodb+srv://rlapushin:0XMuH1LFBnOMjU7B@milab-app.pzlrmiq.mongodb.net/?retryWrites=true&w=majority';
@@ -111,6 +120,21 @@ async function getNewestDishes() {
     console.log("Getting newest dishes");
     const dishesCollection = await getDishesCollection();
     return dishesCollection.find().sort({ uploadDate: -1 }).toArray();
+}
+
+async function calculateDistances(dishes, userLat, userLng) {
+    for (let dish of dishes) {
+        // get restaurant lat and long using geocoder
+        const geocoderRes = await geocoder.geocode(dish.address);
+        const lat = geocoderRes[0].latitude;
+        const long = geocoderRes[0].longitude;
+
+        // calculate distance to user and add to dish object
+        let distanceToUser = getDistanceFromLatLonInKm(userLat, userLng, lat, long);
+        dish.distanceToUser = distanceToUser;
+    }
+
+    return dishes
 }
 
 app.get('/restaurants', async (req, res) => {
