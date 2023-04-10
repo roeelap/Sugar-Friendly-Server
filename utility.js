@@ -9,7 +9,7 @@ const options = {
 }
 const geocoder = NodeGeocoder(options);
 
-export async function calculateDistances(dishes, userLat, userLng) {
+async function calculateDistances(dishes, userLat, userLng) {
     for (let dish of dishes) {
         // get restaurant lat and long using geocoder
         const geocoderRes = await geocoder.geocode(dish.address);
@@ -24,7 +24,7 @@ export async function calculateDistances(dishes, userLat, userLng) {
     return dishes
 }
 
-export function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
+function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
     var R = 6371; // Radius of the earth in km
     var dLat = deg2rad(lat2 - lat1);  // deg2rad below
     var dLon = deg2rad(lon2 - lon1);
@@ -37,6 +37,8 @@ export function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
     return Math.round(d * 100) / 100; // 2 decimal places
 }
 
-export function deg2rad(deg) {
+function deg2rad(deg) {
     return deg * (Math.PI / 180)
 }
+
+module.exports = { calculateDistances };
