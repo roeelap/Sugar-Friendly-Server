@@ -154,11 +154,20 @@ async function getAllRestaurants() {
 }
 
 app.get('/search', async (req, res) => {
-    const query = req.query.query;
+    const query = req.query.query || null;
+    const userLat = req.query.lat || null;
+    const userLng = req.query.lng || null;
+
+    if (userLat == null || userLng == null) {
+        res.send("Please provide user latitude and longitude");
+        return;
+    }
+
     console.log("Searching for " + query);
     try {
         const results = await searchDishes(query);
-        return res.send({ results: results });
+        const resultsWithDistances = await calculateDistances(results, userLat, userLng);
+        return res.send({ results: resultsWithDistances });
     } catch (error) {
         console.error(error);
     }
