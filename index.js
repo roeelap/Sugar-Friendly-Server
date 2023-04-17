@@ -8,7 +8,8 @@ const { getDistanceFromLatLonInKm } = require('./utility');
 
 const app = express();
 app.use(bodyParser.json());
-const PORT = 8080;
+
+const PORT = process.env.PORT || 3000;
 
 // setup geocoder
 const options = {
@@ -19,26 +20,11 @@ const geocoder = NodeGeocoder(options);
 
 
 // connect to the mongoDB database
-const MONGO_URL = 'mongodb+srv://rlapushin:0XMuH1LFBnOMjU7B@milab-app.pzlrmiq.mongodb.net/?retryWrites=true&w=majority';
-const client = new MongoClient(MONGO_URL, {
+// const MONGO_URI = 'mongodb+srv://rlapushin:0XMuH1LFBnOMjU7B@milab-app.pzlrmiq.mongodb.net/?retryWrites=true&w=majority';
+const MONGO_URI = process.env.MONGO_URI;
+const client = new MongoClient(MONGO_URI, {
     useUnifiedTopology: true, useNewUrlParser: true
 });
-client.connect()
-    .then(() => { app.listen(PORT, () => console.log(`Server listening on port ${PORT}!`)); })
-    .catch((err) => console.log(err));
-
-
-const getDishesCollection = async () => {
-    return client.db('Milab-App').collection('Dishes');
-}
-
-const getRestaurantsCollection = async () => {
-    return client.db('Milab-App').collection('Restaurants');
-}
-
-const getTagsCollection = async () => {
-    return client.db('Milab-App').collection('Tags');
-}
 
 
 app.get('/add-dish', async (req, res) => {
@@ -104,6 +90,11 @@ app.get('/dishes', async (req, res) => {
     }
 });
 
+
+async function getDishesCollection() {
+    return client.db('Milab-App').collection('Dishes');
+}
+
 async function getAllDishes() {
     console.log("Getting all dishes");
     const dishesCollection = await getDishesCollection();
@@ -137,21 +128,6 @@ async function calculateDistances(dishes, userLat, userLng) {
     return dishes
 }
 
-app.get('/restaurants', async (req, res) => {
-    console.log("Getting restaurants");
-    try {
-        const result = await getAllRestaurants();            
-        return res.send({ restaurants: result });
-    } catch (error) {
-        console.error(error);
-    }
-});
-
-async function getAllRestaurants() {
-    console.log("Getting all restaurants");
-    const restaurantsCollection = await getRestaurantsCollection();
-    return restaurantsCollection.find().toArray();
-}
 
 app.get('/search', async (req, res) => {
     const query = req.query.query || null;
@@ -188,20 +164,11 @@ async function searchDishes(query) {
     return results;
 }
 
-app.get('/tags', async (req, res) => {
-    console.log("Getting tags");
-    try {
-        const tags = await getTags();
-        return res.send({ tags: tags });
-    } catch (error) {
-        console.error(error);
-    }
-});
 
-async function getTags() {
-    const tagsCollection = await getTagsCollection();
-    const tags = tagsCollection.find().toArray();
-    const foodTags = tags[0].foodTags;
-    const nutritionTags = tags[1].nutritionTags;
-    return foodTags.concat(nutritionTags);
-}
+client.connect()
+.then(() => { 
+    app.listen(PORT, () => {
+        console.log(`Server listening for requests!`);
+    })
+})
+.catch((err) => console.log(err));
