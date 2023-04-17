@@ -19,8 +19,7 @@ const options = {
 const geocoder = NodeGeocoder(options);
 
 
-// connect to the mongoDB database
-// const MONGO_URI = 'mongodb+srv://rlapushin:0XMuH1LFBnOMjU7B@milab-app.pzlrmiq.mongodb.net/?retryWrites=true&w=majority';
+// setup mongodb
 const MONGO_URI = process.env.MONGO_URI;
 const client = new MongoClient(MONGO_URI, {
     useUnifiedTopology: true, useNewUrlParser: true
@@ -36,8 +35,7 @@ app.get('/add-dish', async (req, res) => {
     let address = req.body.address || null;
 
     if (dishName == null || restaurantName == null || address == null) {
-        res.send("Please provide a dish name, restaurant name and address");
-        return;
+        return res.send("Please provide a dish name, restaurant name and address");
     }
 
     const dish = {
@@ -58,6 +56,7 @@ app.get('/add-dish', async (req, res) => {
         .catch(error => console.error(error));
 });
 
+
 app.get('/dishes', async (req, res) => {
     console.log("Getting dishes");
 
@@ -70,7 +69,6 @@ app.get('/dishes', async (req, res) => {
     }
 
     try {
-
         const results = await Promise.all([
             getAllDishes(),
             getTopRatedDishes(), 
@@ -165,10 +163,10 @@ async function searchDishes(query) {
 }
 
 
-client.connect()
-.then(() => { 
+client.connect(err => {
+    if(err){ console.error(err); return false;}
+    // connection to mongo is successful, listen for requests
     app.listen(PORT, () => {
-        console.log(`Server listening for requests!`);
+        console.log("listening for requests");
     })
-})
-.catch((err) => console.log(err));
+});
