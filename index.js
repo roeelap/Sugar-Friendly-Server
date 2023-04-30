@@ -57,6 +57,18 @@ app.get('/add-dish', async (req, res) => {
 });
 
 
+app.get('/ping', async (req, res) => {
+    client.connect()
+    .then(() => { 
+        res.send({ result: true });
+    })
+    .catch((err) => {
+        console.log(err);
+        res.send({ result: false });
+    });
+})
+
+
 app.get('/dishes', async (req, res) => {
     console.log("Getting dishes");
 
@@ -163,10 +175,6 @@ async function searchDishes(query) {
 }
 
 
-client.connect(err => {
-    if(err){ console.error(err); return false;}
-    // connection to mongo is successful, listen for requests
-    app.listen(PORT, () => {
-        console.log("listening for requests");
-    })
+app.listen(PORT, () => {
+    console.log(`Server listening for requests!`);
 });
