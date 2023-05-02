@@ -61,7 +61,7 @@ app.get('/isup', async (req, res) => {
     console.log("Server pinged")
 
     // check if connected to mongodb
-    if (client.isConnected()) {
+    if (!!client && !!client.topology && client.topology.isConnected()) {
         console.log("Connected to mongodb, allowing connection");
         res.send({ result: true });
     } else {
