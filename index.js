@@ -57,7 +57,7 @@ app.get('/add-dish', async (req, res) => {
 });
 
 
-app.get('/ping', async (req, res) => {
+app.get('/isup', async (req, res) => {
     console.log("Server pinged")
 
     // check if connected to mongodb
