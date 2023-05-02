@@ -58,14 +58,26 @@ app.get('/add-dish', async (req, res) => {
 
 
 app.get('/ping', async (req, res) => {
-    client.connect()
-    .then(() => { 
+    console.log("Server pinged")
+
+    // check if connected to mongodb
+    if (client.isConnected()) {
+        console.log("Connected to mongodb, allowing connection");
         res.send({ result: true });
-    })
-    .catch((err) => {
-        console.log(err);
-        res.send({ result: false });
-    });
+    } else {
+        // if not connected, wait until connected
+        console.log("Still Not connected to mongodb, waiting for connection");
+        client.connect()
+        .then(() => {
+            console.log("Connected to mongodb, allowing connection");
+            res.send({ result: true }); 
+        })
+        .catch(error => {
+            console.error(error);
+            console.log("Failed to connect to mongodb, not allowing connection")
+            res.send({ result: false }); 
+        });
+    }
 })
 
 
@@ -175,6 +187,12 @@ async function searchDishes(query) {
 }
 
 
-app.listen(PORT, () => {
-    console.log(`Server listening for requests!`);
+client.connect()
+.then(() => { 
+    app.listen(PORT, () => {
+        console.log(`Server listening for requests!`);
+    });
+})
+.catch((err) => {
+    console.log(err);
 });
