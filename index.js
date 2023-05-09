@@ -103,8 +103,8 @@ app.get('/dishes', async (req, res) => {
         // ]);
 
         // temporary fix:
-        for (result of results) {
-            for (dish of result) {
+        for (let result of results) {
+            for (let dish of result) {
                 dish.distanceToUser = 0;
             }
         }
