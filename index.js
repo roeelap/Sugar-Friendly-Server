@@ -2,22 +2,14 @@
 
 const express = require('express');
 const bodyParser = require('body-parser');
-// const NodeGeocoder = require('node-geocoder');
-const { getDistanceFromLatLonInKm } = require('./utility');
 const { MongoDatabase } = require('./mongo');
+const { LogMealUser } = require('./logmealUser');
+// const { GeocoderUser } = require('./geocoderUser');
 
 const app = express();
 app.use(bodyParser.json());
 
 const PORT = process.env.PORT || 3000;
-
-// // setup geocoder
-// const options = {
-//     provider: 'google',
-//     apiKey: 'AIzaSyA4VcSGbk-S5eAlv5fKl1lk6ZAx1OFAmFw'
-// }
-// const geocoder = NodeGeocoder(options);
-
 
 // setup mongodb
 const mongoDatabase = new MongoDatabase();
@@ -95,11 +87,11 @@ app.get('/dishes', async (req, res) => {
         ]);
 
         // TODO: figure out google cloud billing!!!
-
+        // const geocoderUser = new GeocoderUser();
         // const resultsWithDistances = await Promise.all([
-        //     calculateDistances(results[0], userLat, userLng),
-        //     calculateDistances(results[1], userLat, userLng),
-        //     calculateDistances(results[2], userLat, userLng)
+        //     geocoderUser.calculateDistances(results[0], userLat, userLng),
+        //     geocoderUser.calculateDistances(results[1], userLat, userLng),
+        //     geocoderUser.calculateDistances(results[2], userLat, userLng)
         // ]);
 
         // temporary fix:
@@ -115,22 +107,6 @@ app.get('/dishes', async (req, res) => {
         console.error(error);
     }
 });
-
-
-async function calculateDistances(dishes, userLat, userLng) {
-    for (let dish of dishes) {
-        // get restaurant lat and long using geocoder
-        const geocoderRes = await geocoder.geocode(dish.address);
-        const lat = geocoderRes[0].latitude;
-        const long = geocoderRes[0].longitude;
-
-        // calculate distance to user and add to dish object
-        let distanceToUser = getDistanceFromLatLonInKm(userLat, userLng, lat, long);
-        dish.distanceToUser = distanceToUser;
-    }
-
-    return dishes
-}
 
 
 app.get('/search', async (req, res) => {
@@ -154,17 +130,22 @@ app.get('/search', async (req, res) => {
 });
 
 
-app.post('/upload', (req, res) => {
+app.post('/upload', async (req, res) => {
     // get the image
     const image = req.body.image || null;
     
     if (image == null) {
         res.send({result: false, message: "Please provide an image"});
         return;
-    } 
+    }
 
     console.log(image)
-    res.send({result: true, message: "Image uploaded successfully"});
+
+    logMealUser = new LogMealUser();
+    logMealUser.getNutritionalInfoFromImage(image, (data) => {
+        console.log(data);
+        res.send({result: true, data: data});
+    });
 });
 
 
