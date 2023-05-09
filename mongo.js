@@ -28,25 +28,25 @@ class MongoDatabase {
 
     async getAllDishes() {
         console.log("Getting all dishes");
-        const dishesCollection = await getDishesCollection();
+        const dishesCollection = await this.getDishesCollection();
         return dishesCollection.find().toArray();
     }
 
     async getTopRatedDishes() {
         console.log("Getting top rated dishes");
-        const dishesCollection = await getDishesCollection();
+        const dishesCollection = await this.getDishesCollection();
         return dishesCollection.find().sort({ rating: -1 }).toArray();
     }
 
     async getNewestDishes() {
         console.log("Getting newest dishes");
-        const dishesCollection = await getDishesCollection();
+        const dishesCollection = await this.getDishesCollection();
         return dishesCollection.find().sort({ uploadDate: -1 }).toArray();
     }
 
     async searchDishes(query) {
         const regex = '.*' + query + '.*';
-        const dishesCollection = await getDishesCollection();
+        const dishesCollection = await this.getDishesCollection();
         const results = await dishesCollection.find(
             { $or: [
                 { name: { $regex: regex, $options: 'i' } },
@@ -60,7 +60,7 @@ class MongoDatabase {
     }
 
     async addDish(dish) {
-        const dishesCollection = await getDishesCollection();
+        const dishesCollection = await this.getDishesCollection();
         dishesCollection.insertOne(dish)
         .then(result => { res.send(result); })
         .catch(error => console.error(error));
