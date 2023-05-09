@@ -4,12 +4,17 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const { MongoDatabase } = require('./mongo');
 const { LogMealUser } = require('./logmealUser');
-// const { GeocoderUser } = require('./geocoderUser');
+const { GeocoderUser } = require('./geocoderUser');
 
 const app = express();
 app.use(bodyParser.json());
 
 const PORT = process.env.PORT || 3000;
+
+
+// TODO: figure out google cloud billing!!!
+const geocoderUser = new GeocoderUser();
+
 
 // setup mongodb
 const mongoDatabase = new MongoDatabase();
@@ -87,21 +92,13 @@ app.get('/dishes', async (req, res) => {
         ]);
 
         // TODO: figure out google cloud billing!!!
-        // const geocoderUser = new GeocoderUser();
-        // const resultsWithDistances = await Promise.all([
-        //     geocoderUser.calculateDistances(results[0], userLat, userLng),
-        //     geocoderUser.calculateDistances(results[1], userLat, userLng),
-        //     geocoderUser.calculateDistances(results[2], userLat, userLng)
-        // ]);
+        const resultsWithDistances = await Promise.all([
+            geocoderUser.calculateDistances(results[0], userLat, userLng),
+            geocoderUser.calculateDistances(results[1], userLat, userLng),
+            geocoderUser.calculateDistances(results[2], userLat, userLng)
+        ]);
 
-        // temporary fix:
-        for (let result of results) {
-            for (let dish of result) {
-                dish.distanceToUser = 0;
-            }
-        }
-
-        return res.send({ recommendedDishes: results[0], topRatedDishes: results[1], newestDishes: results[2] });
+        return res.send({ recommendedDishes: resultsWithDistances[0], topRatedDishes: resultsWithDistances[1], newestDishes: resultsWithDistances[2] });
 
     } catch (error) {
         console.error(error);
@@ -122,7 +119,7 @@ app.get('/search', async (req, res) => {
     console.log("Searching for " + query);
     try {
         const results = await mongoDatabase.searchDishes(query);
-        const resultsWithDistances = await calculateDistances(results, userLat, userLng);
+        const resultsWithDistances = await geocoder.calculateDistances(results, userLat, userLng);
         return res.send({ results: resultsWithDistances });
     } catch (error) {
         console.error(error);
