@@ -2,7 +2,7 @@
 
 const express = require('express');
 const bodyParser = require('body-parser');
-const NodeGeocoder = require('node-geocoder');
+// const NodeGeocoder = require('node-geocoder');
 const { getDistanceFromLatLonInKm } = require('./utility');
 const { MongoDatabase } = require('./mongo');
 
@@ -11,12 +11,12 @@ app.use(bodyParser.json());
 
 const PORT = process.env.PORT || 3000;
 
-// setup geocoder
-const options = {
-    provider: 'google',
-    apiKey: 'AIzaSyA4VcSGbk-S5eAlv5fKl1lk6ZAx1OFAmFw'
-}
-const geocoder = NodeGeocoder(options);
+// // setup geocoder
+// const options = {
+//     provider: 'google',
+//     apiKey: 'AIzaSyA4VcSGbk-S5eAlv5fKl1lk6ZAx1OFAmFw'
+// }
+// const geocoder = NodeGeocoder(options);
 
 
 // setup mongodb
@@ -94,13 +94,22 @@ app.get('/dishes', async (req, res) => {
             mongoDatabase.getNewestDishes()
         ]);
 
-        const resultsWithDistances = await Promise.all([
-            calculateDistances(results[0], userLat, userLng),
-            calculateDistances(results[1], userLat, userLng),
-            calculateDistances(results[2], userLat, userLng)
-        ]);
+        // TODO: figure out google cloud billing!!!
 
-        return res.send({ recommendedDishes: resultsWithDistances[0], topRatedDishes: resultsWithDistances[1], newestDishes: resultsWithDistances[2] });
+        // const resultsWithDistances = await Promise.all([
+        //     calculateDistances(results[0], userLat, userLng),
+        //     calculateDistances(results[1], userLat, userLng),
+        //     calculateDistances(results[2], userLat, userLng)
+        // ]);
+
+        // temporary fix:
+        for (result of results) {
+            for (dish of result) {
+                dish.distanceToUser = 0;
+            }
+        }
+
+        return res.send({ recommendedDishes: results[0], topRatedDishes: results[1], newestDishes: results[2] });
 
     } catch (error) {
         console.error(error);
