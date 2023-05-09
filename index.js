@@ -2,9 +2,9 @@
 
 const express = require('express');
 const bodyParser = require('body-parser');
-const MongoClient = require('mongodb').MongoClient;
 const NodeGeocoder = require('node-geocoder');
 const { getDistanceFromLatLonInKm } = require('./utility');
+const { MongoDatabase } = require('./mongo');
 
 const app = express();
 app.use(bodyParser.json());
@@ -20,10 +20,7 @@ const geocoder = NodeGeocoder(options);
 
 
 // setup mongodb
-const MONGO_URI = process.env.MONGO_URI;
-const client = new MongoClient(MONGO_URI, {
-    useUnifiedTopology: true, useNewUrlParser: true
-});
+const mongoDatabase = new MongoDatabase();
 
 
 app.get('/add-dish', async (req, res) => {
@@ -50,10 +47,7 @@ app.get('/add-dish', async (req, res) => {
         address: address
     };
 
-    const dishesCollection = await getDishesCollection();
-    dishesCollection.insertOne(dish)
-        .then(result => { res.send(result); })
-        .catch(error => console.error(error));
+    mongoDatabase.addDish(dish)
 });
 
 
@@ -61,21 +55,22 @@ app.get('/isup', async (req, res) => {
     console.log("Server pinged")
 
     // check if connected to mongodb
+    let client = mongoDatabase.client;
     if (!!client && !!client.topology && client.topology.isConnected()) {
         console.log("Connected to mongodb, allowing connection");
         res.send({ result: true });
     } else {
         // if not connected, wait until connected
         console.log("Still Not connected to mongodb, waiting for connection");
-        client.connect()
-        .then(() => {
-            console.log("Connected to mongodb, allowing connection");
-            res.send({ result: true }); 
-        })
-        .catch(error => {
-            console.error(error);
-            console.log("Failed to connect to mongodb, not allowing connection")
-            res.send({ result: false }); 
+        mongoDatabase.init((error) => {
+            if (error) {
+                console.log("Failed to connect to mongodb, not allowing connection")
+                console.error(error);
+                res.send({ result: false });
+            } else {
+                console.log("Connected to mongodb, allowing connection");
+                res.send({ result: true });
+            }
         });
     }
 })
@@ -94,9 +89,9 @@ app.get('/dishes', async (req, res) => {
 
     try {
         const results = await Promise.all([
-            getAllDishes(),
-            getTopRatedDishes(), 
-            getNewestDishes()
+            mongoDatabase.getAllDishes(),
+            mongoDatabase.getTopRatedDishes(), 
+            mongoDatabase.getNewestDishes()
         ]);
 
         const resultsWithDistances = await Promise.all([
@@ -112,28 +107,6 @@ app.get('/dishes', async (req, res) => {
     }
 });
 
-
-async function getDishesCollection() {
-    return client.db('Milab-App').collection('Dishes');
-}
-
-async function getAllDishes() {
-    console.log("Getting all dishes");
-    const dishesCollection = await getDishesCollection();
-    return dishesCollection.find().toArray();
-}
-
-async function getTopRatedDishes() {
-    console.log("Getting top rated dishes");
-    const dishesCollection = await getDishesCollection();
-    return dishesCollection.find().sort({ rating: -1 }).toArray();
-}
-
-async function getNewestDishes() {
-    console.log("Getting newest dishes");
-    const dishesCollection = await getDishesCollection();
-    return dishesCollection.find().sort({ uploadDate: -1 }).toArray();
-}
 
 async function calculateDistances(dishes, userLat, userLng) {
     for (let dish of dishes) {
@@ -163,7 +136,7 @@ app.get('/search', async (req, res) => {
 
     console.log("Searching for " + query);
     try {
-        const results = await searchDishes(query);
+        const results = await mongoDatabase.searchDishes(query);
         const resultsWithDistances = await calculateDistances(results, userLat, userLng);
         return res.send({ results: resultsWithDistances });
     } catch (error) {
@@ -171,28 +144,28 @@ app.get('/search', async (req, res) => {
     }
 });
 
-async function searchDishes(query) {
-    const regex = '.*' + query + '.*';
-    const dishesCollection = await getDishesCollection();
-    const results = await dishesCollection.find(
-        { $or: [
-            { name: { $regex: regex, $options: 'i' } },
-            { restaurant: { $regex: regex, $options: 'i' } },
-            { foodTags: { $regex: regex, $options: 'i' } },
-            { nutritionTags: { $regex: regex, $options: 'i' } }
-        ]}
-    ).toArray();
-    console.log(results);
-    return results;
-}
+
+app.post('/upload', (req, res) => {
+    // get the image
+    const image = req.body.image || null;
+    
+    if (image == null) {
+        res.send({result: false, message: "Please provide an image"});
+        return;
+    } 
+
+    console.log(image)
+    res.send({result: true, message: "Image uploaded successfully"});
+});
 
 
-client.connect()
-.then(() => { 
+mongoDatabase.init((err) => {
+    if (err != null) {
+        console.error(err);
+        return;
+    }
+
     app.listen(PORT, () => {
         console.log(`Server listening for requests!`);
     });
 })
-.catch((err) => {
-    console.log(err);
-});
