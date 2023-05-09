@@ -119,7 +119,7 @@ app.get('/search', async (req, res) => {
     console.log("Searching for " + query);
     try {
         const results = await mongoDatabase.searchDishes(query);
-        const resultsWithDistances = await geocoder.calculateDistances(results, userLat, userLng);
+        const resultsWithDistances = await geocoderUser.calculateDistances(results, userLat, userLng);
         return res.send({ results: resultsWithDistances });
     } catch (error) {
         console.error(error);
