@@ -24,7 +24,7 @@ class MongoDatabase {
 
     async getUser(userName) {
         const usersCollection = await this.getUsersCollection();
-        let user = usersCollection.findOne({ userName: userName });
+        let user = await usersCollection.findOne({ userName: userName });
 
         console.log("Getting user: " + user);
 
