@@ -71,21 +71,21 @@ class MongoDatabase {
     async getAllDishes() {
         console.log("Getting all dishes");
         const dishesCollection = await this.getDishesCollection();
-        const dishes = dishesCollection.find().toArray();
+        const dishes = await dishesCollection.find().toArray();
         return this.ObjectIdToString(dishes);
     }
 
     async getTopRatedDishes() {
         console.log("Getting top rated dishes");
         const dishesCollection = await this.getDishesCollection();
-        const dishes = dishesCollection.find().sort({ rating: -1 }).toArray();
+        const dishes = await dishesCollection.find().sort({ rating: -1 }).toArray();
         return this.ObjectIdToString(dishes);
     }
 
     async getNewestDishes() {
         console.log("Getting newest dishes");
         const dishesCollection = await this.getDishesCollection();
-        const dishes = dishesCollection.find().sort({ uploadDate: -1 }).toArray();
+        const dishes = await dishesCollection.find().sort({ uploadDate: -1 }).toArray();
         return this.ObjectIdToString(dishes);
     }
 
