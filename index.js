@@ -147,10 +147,12 @@ app.get('/search', async (req, res) => {
 });
 
 
-app.get('/likeDish', async (req, res) => {
+app.get('/toggleDishLikability', async (req, res) => {
     const dishId = req.query.dishId || null;
     const userName = req.query.userName || null;
     const isLiked = req.query.isLiked || null;
+
+    console.log("toggling dish " + dishId + " for user " + userName + " with isLiked " + isLiked);
 
     if (dishId == null || userName == null || isLiked == null) {
         res.send("Please provide a dish id, a username, and whether or not the user likes the dish");
