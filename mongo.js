@@ -25,11 +25,12 @@ class MongoDatabase {
     async getUser(userName) {
         const usersCollection = await this.getUsersCollection();
         let user = usersCollection.findOne({ userName: userName });
+
         return {
             name: user.name,
             userName: user.userName,
             // map objectIds to strings
-            favoriteDishes: user.favoriteDishes.map(id => id.toString())
+            favoriteDishes: this.ObjectIdToString(user.favoriteDishes),
         }
     }
 
@@ -100,12 +101,10 @@ class MongoDatabase {
     }
 
     ObjectIdToString(dishes) {
-        return dishes.map(dish => {
-            return {
-                ...dish,
-                _id: dish._id.toString()
-            }
-        });
+        for (dish of dishes) {
+            dish._id = dish._id.toString();
+        }
+        return dishes;
     }
 
 }
