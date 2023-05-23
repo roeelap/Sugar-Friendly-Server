@@ -29,6 +29,15 @@ class MongoDatabase {
         console.log("Getting user");
         console.log(user);
 
+        if (user == null) {
+            return null;
+        }
+
+        // map objectIds to strings
+        for (let dish of user.favoriteDishes) {
+            dish = dish.toString();
+        }
+
         return {
             name: user.name,
             userName: user.userName,
