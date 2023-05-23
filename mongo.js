@@ -51,25 +51,25 @@ class MongoDatabase {
             // add dish to user's favorite dishes
             usersCollection.updateOne(
                 { userName: userName },
-                { $addToSet: { favoriteDishes: ObjectId(dishId) } }
+                { $addToSet: { favoriteDishes: dishId } }
             ).then(result => { 
                 if (result.modifiedCount == 0) {
                     return false;
                 }
                 return true;
             })
-         } else {
+        } else {
             // remove dish from user's favorite dishes
             usersCollection.updateOne(
                 { userName: userName },
-                { $pull: { favoriteDishes: ObjectId(dishId) } }
+                { $pull: { favoriteDishes: dishId } }
             ).then(result => { 
                 if (result.modifiedCount == 0) {
                     return false;
                 }
                 return true;
             })
-         }
+        }
     }
 
     async getUsersCollection() {
