@@ -84,7 +84,7 @@ app.get('/login', async (req, res) => {
 
     try {
         const user = await mongoDatabase.getUser(userName);
-        return res.send(user);
+        return res.send({ user: user });
     } catch (error) {
         console.error(error);
         return res.send({ error: error });
