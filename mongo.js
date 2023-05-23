@@ -41,8 +41,7 @@ class MongoDatabase {
         return {
             name: user.name,
             userName: user.userName,
-            // map objectIds to strings
-            favoriteDishes: this.ObjectIdToString(user.favoriteDishes),
+            favoriteDishes: user.favoriteDishes,
         }
     }
 
