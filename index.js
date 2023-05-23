@@ -72,12 +72,37 @@ app.get('/isup', async (req, res) => {
     }
 })
 
+app.get('/login', async (req, res) => {
+    console.log("Logging in");
 
-app.get('/dishes', async (req, res) => {
+    const userName = req.query.userName || null;
+
+    if (userName == null) {
+        res.send("Please provide a user name");
+        return;
+    }
+
+    try {
+        const user = await mongoDatabase.getUser(userName);
+        return res.send(user);
+    } catch (error) {
+        console.error(error);
+        return res.send({ error: error });
+    }
+});
+
+
+app.get('/home', async (req, res) => {
     console.log("Getting dishes");
 
+    const userName = req.query.userName || null;
     const userLat = req.query.lat || null;
     const userLng = req.query.lng || null;
+
+    if (userName == null) {
+        res.send("Please provide a user name");
+        return;
+    }
 
     if (userLat == null || userLng == null) {
         res.send("Please provide user latitude and longitude");
@@ -85,6 +110,9 @@ app.get('/dishes', async (req, res) => {
     }
 
     try {
+        
+        const user = await mongoDatabase.getUser(userName);
+
         const results = await Promise.all([
             mongoDatabase.getAllDishes(),
             mongoDatabase.getTopRatedDishes(), 
@@ -98,10 +126,16 @@ app.get('/dishes', async (req, res) => {
             geocoderUser.calculateDistances(results[2], userLat, userLng)
         ]);
 
-        return res.send({ recommendedDishes: resultsWithDistances[0], topRatedDishes: resultsWithDistances[1], newestDishes: resultsWithDistances[2] });
+        return res.send({ 
+            user: user, 
+            recommendedDishes: resultsWithDistances[0], 
+            topRatedDishes: resultsWithDistances[1], 
+            newestDishes: resultsWithDistances[2] 
+        });
 
     } catch (error) {
         console.error(error);
+        return res.send({ error: error });
     }
 });
 
@@ -127,6 +161,25 @@ app.get('/search', async (req, res) => {
 });
 
 
+app.get('/likeDish', async (req, res) => {
+    const dishId = req.query.dishId || null;
+    const userName = req.query.userName || null;
+
+    if (dishId == null || userName == null) {
+        res.send("Please provide a dish id and a user name");
+        return;
+    }
+
+    try {
+        const result = await mongoDatabase.likeDish(dishId, userName);
+        return res.send({ result: result });
+    } catch (error) {
+        console.error(error);
+        return res.send({ error: error });
+    }
+});
+
+
 app.post('/upload', async (req, res) => {
     // get the image
     const image = req.body.image || null;
@@ -138,7 +191,7 @@ app.post('/upload', async (req, res) => {
 
     console.log(image)
 
-    logMealUser = new LogMealUser();
+    let logMealUser = new LogMealUser();
     logMealUser.getNutritionalInfoFromImage(image, (data) => {
         console.log(data);
         res.send({result: true, data: data});

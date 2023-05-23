@@ -1,6 +1,7 @@
 "use strict";
 
 const MongoClient = require('mongodb').MongoClient;
+const ObjectId = require('mongodb').ObjectId;
 
 class MongoDatabase {
     constructor() {
@@ -21,6 +22,35 @@ class MongoDatabase {
         });
     }
 
+    async getUser(userName) {
+        const usersCollection = await this.getUsersCollection();
+        let user = usersCollection.findOne({ userName: userName });
+        return {
+            name: user.name,
+            userName: user.userName,
+            // map objectIds to strings
+            favoriteDishes: user.favoriteDishes.map(id => id.toString())
+        }
+    }
+
+    async likeDish(userName, dishId) {
+        const usersCollection = await this.getUsersCollection();
+        
+        // add dish to user's favorite dishes
+        usersCollection.updateOne(
+            { userName: userName },
+            { $addToSet: { favoriteDishes: ObjectId(dishId) } }
+        ).then(result => { 
+            if (result.modifiedCount == 0) {
+                return false;
+            }
+            return true;
+         })
+    }
+
+    async getUsersCollection() {
+        return this.client.db('Milab-App').collection('Users');
+    }
 
     async getDishesCollection() {
         return this.client.db('Milab-App').collection('Dishes');
@@ -29,19 +59,22 @@ class MongoDatabase {
     async getAllDishes() {
         console.log("Getting all dishes");
         const dishesCollection = await this.getDishesCollection();
-        return dishesCollection.find().toArray();
+        const dishes = dishesCollection.find().toArray();
+        return this.ObjectIdToString(dishes);
     }
 
     async getTopRatedDishes() {
         console.log("Getting top rated dishes");
         const dishesCollection = await this.getDishesCollection();
-        return dishesCollection.find().sort({ rating: -1 }).toArray();
+        const dishes = dishesCollection.find().sort({ rating: -1 }).toArray();
+        return this.ObjectIdToString(dishes);
     }
 
     async getNewestDishes() {
         console.log("Getting newest dishes");
         const dishesCollection = await this.getDishesCollection();
-        return dishesCollection.find().sort({ uploadDate: -1 }).toArray();
+        const dishes = dishesCollection.find().sort({ uploadDate: -1 }).toArray();
+        return this.ObjectIdToString(dishes);
     }
 
     async searchDishes(query) {
@@ -56,7 +89,7 @@ class MongoDatabase {
             ]}
         ).toArray();
         console.log(results);
-        return results;
+        return this.ObjectIdToString(results);
     }
 
     async addDish(dish) {
@@ -64,6 +97,15 @@ class MongoDatabase {
         dishesCollection.insertOne(dish)
         .then(result => { res.send(result); })
         .catch(error => console.error(error));
+    }
+
+    ObjectIdToString(dishes) {
+        return dishes.map(dish => {
+            return {
+                ...dish,
+                _id: dish._id.toString()
+            }
+        });
     }
 
 }
