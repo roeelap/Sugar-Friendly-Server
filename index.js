@@ -95,23 +95,10 @@ app.get('/login', async (req, res) => {
 app.get('/home', async (req, res) => {
     console.log("Getting dishes");
 
-    const userName = req.query.userName || null;
     const userLat = req.query.lat || null;
     const userLng = req.query.lng || null;
 
-    if (userName == null) {
-        res.send("Please provide a user name");
-        return;
-    }
-
-    if (userLat == null || userLng == null) {
-        res.send("Please provide user latitude and longitude");
-        return;
-    }
-
     try {
-        
-        const user = await mongoDatabase.getUser(userName);
 
         const results = await Promise.all([
             mongoDatabase.getAllDishes(),
@@ -127,10 +114,9 @@ app.get('/home', async (req, res) => {
         ]);
 
         return res.send({ 
-            user: user, 
             recommendedDishes: resultsWithDistances[0], 
             topRatedDishes: resultsWithDistances[1], 
-            newestDishes: resultsWithDistances[2] 
+            newestDishes: resultsWithDistances[2],
         });
 
     } catch (error) {

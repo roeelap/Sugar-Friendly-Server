@@ -15,19 +15,21 @@ class GeocoderUser {
 
     async calculateDistances(dishes, userLat, userLng) {
         for (let dish of dishes) {
-            // // get restaurant lat and long using geocoder
-            // const geocoderRes = await this.geocoder.geocode(dish.address);
-            // const lat = geocoderRes[0].latitude;
-            // const long = geocoderRes[0].longitude;
-    
-            // // calculate distance to user and add to dish object
-            // let distanceToUser = getDistanceFromLatLonInKm(userLat, userLng, lat, long);
-            // dish.distanceToUser = distanceToUser;
+            if (userLat == null || userLng == null) {
+                dish.distanceToUser = 0;
+            } else {
+                // // get restaurant lat and long using geocoder
+                // const geocoderRes = await this.geocoder.geocode(dish.address);
+                // const lat = geocoderRes[0].latitude;
+                // const long = geocoderRes[0].longitude;
+        
+                // // calculate distance to user and add to dish object
+                // let distanceToUser = getDistanceFromLatLonInKm(userLat, userLng, lat, long);
+                // dish.distanceToUser = distanceToUser;
 
-
-            dish.distanceToUser = 0; // <--- temporary fix
+                dish.distanceToUser = 0; // <--- temporary fix
+            }
         }
-    
         return dishes
     }
 
