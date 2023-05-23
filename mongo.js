@@ -26,7 +26,8 @@ class MongoDatabase {
         const usersCollection = await this.getUsersCollection();
         let user = await usersCollection.findOne({ userName: userName });
 
-        console.log("Getting user: " + user);
+        console.log("Getting user");
+        console.log(user);
 
         return {
             name: user.name,
@@ -103,7 +104,7 @@ class MongoDatabase {
     }
 
     ObjectIdToString(dishes) {
-        for (dish of dishes) {
+        for (let dish of dishes) {
             dish._id = dish._id.toString();
         }
         return dishes;
