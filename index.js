@@ -150,14 +150,15 @@ app.get('/search', async (req, res) => {
 app.get('/likeDish', async (req, res) => {
     const dishId = req.query.dishId || null;
     const userName = req.query.userName || null;
+    const isLiked = req.query.isLiked || null;
 
-    if (dishId == null || userName == null) {
-        res.send("Please provide a dish id and a user name");
+    if (dishId == null || userName == null || isLiked == null) {
+        res.send("Please provide a dish id, a username, and whether or not the user likes the dish");
         return;
     }
 
     try {
-        const result = await mongoDatabase.likeDish(dishId, userName);
+        const result = await mongoDatabase.likeDish(dishId, userName, isLiked);
         return res.send({ result: result });
     } catch (error) {
         console.error(error);

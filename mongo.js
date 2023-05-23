@@ -45,19 +45,31 @@ class MongoDatabase {
         }
     }
 
-    async likeDish(userName, dishId) {
+    async toggleDishLikability(userName, dishId, isLiked) {
         const usersCollection = await this.getUsersCollection();
-        
-        // add dish to user's favorite dishes
-        usersCollection.updateOne(
-            { userName: userName },
-            { $addToSet: { favoriteDishes: ObjectId(dishId) } }
-        ).then(result => { 
-            if (result.modifiedCount == 0) {
-                return false;
-            }
-            return true;
-         })
+        if (isLiked) {
+            // add dish to user's favorite dishes
+            usersCollection.updateOne(
+                { userName: userName },
+                { $addToSet: { favoriteDishes: ObjectId(dishId) } }
+            ).then(result => { 
+                if (result.modifiedCount == 0) {
+                    return false;
+                }
+                return true;
+            })
+         } else {
+            // remove dish from user's favorite dishes
+            usersCollection.updateOne(
+                { userName: userName },
+                { $pull: { favoriteDishes: ObjectId(dishId) } }
+            ).then(result => { 
+                if (result.modifiedCount == 0) {
+                    return false;
+                }
+                return true;
+            })
+         }
     }
 
     async getUsersCollection() {
