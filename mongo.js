@@ -46,26 +46,29 @@ class MongoDatabase {
     }
 
     async toggleDishLikability(userName, dishId, isLiked) {
-        const usersCollection = await this.getUsersCollection();
-        let result;
-        if (isLiked) {
-            // add dish to user's favorite dishes
-            result = await usersCollection.updateOne(
-                { userName: userName },
-                { $addToSet: { favoriteDishes: [dishId] } })
-        } else {
-            // remove dish from user's favorite dishes
-            result = await usersCollection.updateOne(
-                { userName: userName },
-                { $pull: { favoriteDishes: dishId } })
-        }
-
-        console.log("num of users modified: " + result.modifiedCount)
-
-        if (result.modifiedCount == 0) {
+        const user = await this.getUser(userName);
+        if (user == null) { 
             return false;
         }
-        return true;
+
+        if (isLiked) {
+            // add dish to user's favorite dishes if not already there
+            if (!user.favoriteDishes.includes(dishId)) {
+                user.favoriteDishes.push(dishId);
+            }
+        } else {
+            // remove dish from user's favorite dishes if there
+            if (user.favoriteDishes.includes(dishId)) {
+                user.favoriteDishes = user.favoriteDishes.filter(dish => dish != dishId);
+            }
+        }
+        
+        const usersCollection = await this.getUsersCollection();
+        const result = await usersCollection.updateOne(
+            { userName: userName },
+            { $set: { favoriteDishes: user.favoriteDishes } }
+        );
+        return result.modifiedCount == 1;
     }
 
     async getUsersCollection() {
