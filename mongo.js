@@ -45,30 +45,13 @@ class MongoDatabase {
         }
     }
 
-    async toggleDishLikability(userName, dishId, isLiked) {
-        const user = await this.getUser(userName);
-        if (user == null) { 
-            return false;
-        }
-
-        if (isLiked) {
-            // add dish to user's favorite dishes if not already there
-            if (!user.favoriteDishes.includes(dishId)) {
-                user.favoriteDishes.push(dishId);
-            }
-        } else {
-            // remove dish from user's favorite dishes if there
-            if (user.favoriteDishes.includes(dishId)) {
-                user.favoriteDishes = user.favoriteDishes.filter(dish => dish != dishId);
-            }
-        }
-        
+    async updateUserFavoriteDishes(userName, favoriteDishes) {
         const usersCollection = await this.getUsersCollection();
         const result = await usersCollection.updateOne(
             { userName: userName },
-            { $set: { favoriteDishes: user.favoriteDishes } }
+            { $set: { favoriteDishes: favoriteDishes } }
         );
-        return result.modifiedCount == 1;
+        return result;
     }
 
     async getUsersCollection() {

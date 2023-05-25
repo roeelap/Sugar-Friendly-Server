@@ -147,22 +147,22 @@ app.get('/search', async (req, res) => {
 });
 
 
-app.get('/toggleDishLikability', async (req, res) => {
-    const dishId = req.query.dishId || null;
-    const userName = req.query.userName || null;
-    const isLiked = req.query.isLiked || null;
+app.post('/updateUser', async (req, res) => {
+    console.log("Updating user");
+    const userName = req.body.userName || null;
+    const favoriteDishes = req.body.favoriteDishes || null;
 
-    console.log("toggling dish " + dishId + " for user " + userName + " with isLiked " + isLiked);
-
-    if (dishId == null || userName == null || isLiked == null) {
-        res.send("Please provide a dish id, a username, and whether or not the user likes the dish");
+    if (userName == null) {
+        res.send("Please provide a userName");
         return;
     }
 
+    console.log("Updating user " + userName + " with favorite dishes " + favoriteDishes);
+
     try {
-        const result = await mongoDatabase.toggleDishLikability(dishId, userName, isLiked);
+        const result = await mongoDatabase.updateUserFavoriteDishes(userName, favoriteDishes);
         const user = await mongoDatabase.getUser(userName);
-        return res.send({ result: result });
+        return res.send({ result: result.acknowledged });
     } catch (error) {
         console.error(error);
         return res.send({ error: error });
