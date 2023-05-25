@@ -52,13 +52,15 @@ class MongoDatabase {
             // add dish to user's favorite dishes
             result = await usersCollection.updateOne(
                 { userName: userName },
-                { $addToSet: { favoriteDishes: dishId } })
+                { $addToSet: { favoriteDishes: [dishId] } })
         } else {
             // remove dish from user's favorite dishes
             result = await usersCollection.updateOne(
                 { userName: userName },
                 { $pull: { favoriteDishes: dishId } })
         }
+
+        console.log("num of users modified: " + result.modifiedCount)
 
         if (result.modifiedCount == 0) {
             return false;
