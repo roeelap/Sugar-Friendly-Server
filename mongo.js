@@ -47,29 +47,23 @@ class MongoDatabase {
 
     async toggleDishLikability(userName, dishId, isLiked) {
         const usersCollection = await this.getUsersCollection();
+        let result;
         if (isLiked) {
             // add dish to user's favorite dishes
-            usersCollection.updateOne(
+            result = await usersCollection.updateOne(
                 { userName: userName },
-                { $addToSet: { favoriteDishes: dishId } }
-            ).then(result => { 
-                if (result.modifiedCount == 0) {
-                    return false;
-                }
-                return true;
-            })
+                { $addToSet: { favoriteDishes: dishId } })
         } else {
             // remove dish from user's favorite dishes
-            usersCollection.updateOne(
+            result = await usersCollection.updateOne(
                 { userName: userName },
-                { $pull: { favoriteDishes: dishId } }
-            ).then(result => { 
-                if (result.modifiedCount == 0) {
-                    return false;
-                }
-                return true;
-            })
+                { $pull: { favoriteDishes: dishId } })
         }
+
+        if (result.modifiedCount == 0) {
+            return false;
+        }
+        return true;
     }
 
     async getUsersCollection() {
