@@ -51,6 +51,7 @@ class MongoDatabase {
             { userName: userName },
             { $set: { favoriteDishes: favoriteDishes } }
         );
+
         return result;
     }
 

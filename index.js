@@ -162,7 +162,7 @@ app.post('/updateUser', async (req, res) => {
     try {
         const result = await mongoDatabase.updateUserFavoriteDishes(userName, favoriteDishes);
         const user = await mongoDatabase.getUser(userName);
-        return res.send({ result: result.acknowledged });
+        return res.send({ result: result.modifiedCount > 0 });
     } catch (error) {
         console.error(error);
         return res.send({ error: error });
