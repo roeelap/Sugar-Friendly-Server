@@ -161,6 +161,7 @@ app.get('/toggleDishLikability', async (req, res) => {
 
     try {
         const result = await mongoDatabase.toggleDishLikability(dishId, userName, isLiked);
+        const user = await mongoDatabase.getUser(userName);
         return res.send({ result: result });
     } catch (error) {
         console.error(error);
