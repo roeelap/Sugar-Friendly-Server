@@ -1,7 +1,6 @@
 "use strict";
 
 const MongoClient = require('mongodb').MongoClient;
-const ObjectId = require('mongodb').ObjectId;
 
 class MongoDatabase {
     constructor() {
@@ -101,9 +100,13 @@ class MongoDatabase {
 
     async uploadDish(dish) {
         const dishesCollection = await this.getDishesCollection();
-        let result = await dishesCollection.insertOne(dish);
-
-        return result;
+        try {
+            await dishesCollection.insertOne(dish);
+            return true;
+        } catch (error) {
+            console.error(error);
+            return false;
+        }
     }
 
     ObjectIdToString(dishes) {

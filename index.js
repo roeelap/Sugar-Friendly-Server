@@ -50,7 +50,7 @@ app.post('/uploadDish', async (req, res) => {
     console.log(dish);
 
     const result = await mongoDatabase.uploadDish(dish);
-    return res.send({ result: result.insertedCount == 1 });
+    return res.send({ result: result });
 });
 
 
