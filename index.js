@@ -19,7 +19,7 @@ const geocoderUser = new GeocoderUser();
 const mongoDatabase = new MongoDatabase();
 
 
-app.get('/uploadDish', async (req, res) => {
+app.post('/uploadDish', async (req, res) => {
     console.log("Uploading a new dish");
     let name = req.body.name || null;
     let restaurant = req.body.restaurant || null;
