@@ -99,11 +99,11 @@ class MongoDatabase {
         return this.ObjectIdToString(results);
     }
 
-    async addDish(dish) {
+    async uploadDish(dish) {
         const dishesCollection = await this.getDishesCollection();
-        dishesCollection.insertOne(dish)
-        .then(result => { res.send(result); })
-        .catch(error => console.error(error));
+        let result = await dishesCollection.insertOne(dish);
+
+        return result;
     }
 
     ObjectIdToString(dishes) {

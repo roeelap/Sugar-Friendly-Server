@@ -3,7 +3,6 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const { MongoDatabase } = require('./mongo');
-const { LogMealUser } = require('./logmealUser');
 const { GeocoderUser } = require('./geocoderUser');
 
 const app = express();
@@ -20,31 +19,38 @@ const geocoderUser = new GeocoderUser();
 const mongoDatabase = new MongoDatabase();
 
 
-app.get('/add-dish', async (req, res) => {
-    console.log("Adding a dish");
-    let dishName = req.body.dishName || null;
-    let restaurantName = req.body.restaurantName || null;
-    let foodTags = req.body.foodTags || null;
-    let nutritionTags = req.body.nutritionTags || null;
+app.get('/uploadDish', async (req, res) => {
+    console.log("Uploading a new dish");
+    let name = req.body.name || null;
+    let restaurant = req.body.restaurant || null;
+    let tags = req.body.tags || null;
+    let sugarRating = req.body.sugarRating || null;
     let address = req.body.address || null;
+    let dishImage = req.body.dishImage || null;
+    let nutritionalValues = req.body.nutritionalValues || null;
 
-    if (dishName == null || restaurantName == null || address == null) {
-        return res.send("Please provide a dish name, restaurant name and address");
+    if (dishName == null || restaurantName == null) {
+        return res.send("Please provide a dish name and restaurant name");
     }
 
     const dish = {
-        name: dishName,
-        restaurant: restaurantName,
-        foodTags: foodTags,
-        nutritionTags: nutritionTags,
+        name: name,
+        restaurant: restaurant,
+        foodTags: tags,
+        nutritionTags: tags,
         likes: 0,
         rating: 3.0,
-        sugarRating: 3.0,
+        sugarRating: sugarRating,
         uploadDate: new Date(),
-        address: address
+        address: address,
+        dishImage: dishImage,
+        nutritionalValues: nutritionalValues,
     };
 
-    mongoDatabase.addDish(dish)
+    console.log(dish);
+
+    const result = await mongoDatabase.uploadDish(dish);
+    return res.send({ result: result.insertedCount == 1 });
 });
 
 
@@ -167,25 +173,6 @@ app.post('/updateUser', async (req, res) => {
         console.error(error);
         return res.send({ error: error });
     }
-});
-
-
-app.post('/upload', async (req, res) => {
-    // get the image
-    const image = req.body.image || null;
-    
-    if (image == null) {
-        res.send({result: false, message: "Please provide an image"});
-        return;
-    }
-
-    console.log(image)
-
-    let logMealUser = new LogMealUser();
-    logMealUser.getNutritionalInfoFromImage(image, (data) => {
-        console.log(data);
-        res.send({result: true, data: data});
-    });
 });
 
 
