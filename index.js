@@ -29,7 +29,7 @@ app.post('/uploadDish', async (req, res) => {
     let dishImage = req.body.dishImage || null;
     let nutritionalValues = req.body.nutritionalValues || null;
 
-    if (dishName == null || restaurantName == null) {
+    if (name == null || restaurant == null) {
         return res.send("Please provide a dish name and restaurant name");
     }
 
